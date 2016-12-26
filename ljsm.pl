@@ -1,6 +1,6 @@
 #!perl
 # CVS: $Id: ljsm.pl,v 2.9 2007/07/22 19:15:09 sasha Exp $
-# Author: Alexander Nikolaev <sasha_nikolaev@yahoo.com>
+# Author: Alexander Nikolaev <variomap@gmail.com>
 
 #perl2exe_info FileDescription=Utility for Livejournal.com backup
 #perl2exe_info ProductName=LJSM
@@ -67,7 +67,7 @@ use constant {
 	CLIENT			=> 'Perl-ljsm/2.8; sasha_nikolaev@yahoo.com',
 	CVSVERSION		=> '$Revision: 2.8 $', # don't touch this
 	SAVE_PICS		=> 1,	# download standard icons (1) usepics (2) or all graphics referenced by post (3)
-	BASE_DOMAIN		=> 'lj.rossia.org'
+	BASE_DOMAIN		=> 'livejournal.com' #'lj.rossia.org'
 };
 
 # ===================================================================
@@ -162,7 +162,7 @@ foreach $user (@ARGV) { # for each user
 	@posts = ();
 	$stat{'count_posts'} = $stat{'count_memos'} = 0;
 	logmsg("\n\n=== processing user $user\n");
-	
+
 	push @posts, get_memos($user) if ($opt_m || $opt_a);
 	push @posts, get_posts($user) unless ($opt_m && !$opt_a);
 	get_files($user);
@@ -740,6 +740,7 @@ sub get_page {
 	if (!$is_image) {
 		$url .= ($url =~ /\?/)? '&format=light' : '?format=light' 
 			if ($url !~ /format=light/);
+    $url .= '&style=mine';
 	}
 	my $logprefix = ($use_threader)? "THREADER: " : '';
 	logmsg("<< $logprefix$url\n",2);
@@ -949,6 +950,7 @@ sub process_html_file {
 	$title = '';
 	while ($line = <DF>) {
 		$kw = $1 if ($line =~ /<meta name="keywords" content="(.*?)">/);
+    $title = $1 if ($line =~ m#<title>(.*): $user</title>#);
 		$title = $1 if ($line =~ m#<font face=["']Arial,Helvetica['"] size=['"]?\+1['"]?><i><b>(.*?)</b></i>#i);
 		$title = "<i>$1</i>" if ($line =~ m#<span class="heading">Error</span><br />(.*)$#i);
 		$title = "<i>$1</i>" if ($line =~ m#^<H1>Error</H1><P>(.*)</P>$#i);
