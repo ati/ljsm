@@ -1255,7 +1255,7 @@ $0 -x user1 user2 ...
  -I = ignore network errors and continue fetching posts
  -x = rebuild index file and exit
  -u user:password = specify user:password pair for LJ login on the command prompt
- -U = make UTF-8 to localt charset conversion
+ -U = make UTF-8 to locale charset conversion
  -p proxyURL = use proxyURL as a http proxy
  -d yyyy/mm[:yyyy/mm] = save posts back to the specified date or in the specified date range
  -t = use threader (@{[THREADER]}) for downloading posts with 50 or more comments
