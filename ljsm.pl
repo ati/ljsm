@@ -30,9 +30,9 @@ see usage() subroutine for usage summary
  - [x] add &usescheme=lynx to lj queries.
  - [x] proxy support
  - [-] usable pager
- - [x] better date range handling (command-line switch?), 
- - [x] explicitly show 
- 	"You must be logged in to view this protected entry" and 
+ - [x] better date range handling (command-line switch?),
+ - [x] explicitly show
+ 	"You must be logged in to view this protected entry" and
 	"This journal is deleted." cases in the index file
  - [x] no comments download
  - [ ] remove javascript from downloaded files
@@ -55,7 +55,7 @@ http://www.livejournal.com/community/lj_clients/197260.html
 
 =cut
 
-use constant { 
+use constant {
 	LOGIN			=> '',	# leave it empty if you don't want to login
 	PASSWORD		=> '',
 	START_YEAR		=> 2001,	# fetch data back to this year
@@ -172,8 +172,8 @@ foreach $user (@ARGV) { # for each user
 }
 
 # get images
-if (($stat{'got_posts'} > 0) && 
-	(scalar keys %images) && 
+if (($stat{'got_posts'} > 0) &&
+	(scalar keys %images) &&
 	$opt_i) {
 	get_pics();
 }
@@ -192,8 +192,9 @@ if (($stat{'got_posts'} > 0) &&
 # http://users.livejournal.com/_a_/570.html (post, user with uderscores -2 )
 # http://community.livejournal.com/lj_dev/1234.html (post in comunity)
 # http://community.livejournal.com/rulj/862105.html (post in community without underscores)
+# http://users.livejournal.com/4x-/189231.html
 # (same as http://rulj.livejournal.com/862105.html)
-# 
+#
 # link type may be
 # P - post
 # Q - post in community
@@ -205,21 +206,21 @@ sub parse_link {
 	my ($link_type, $user, $post_id);
 
 	my %url_parts = (
-		'/tools/memories.bml\?user=(\w+)'	=> 'M',
-		'/users/(\w+)/(\d+).html'			=> 'P',
-		'/~(\w+)/(\d+).html'				=> 'P',
+		'/tools/memories.bml\?user=([-\w]+)'	=> 'M',
+		'/users/([-\w]+)/(\d+).html'			=> 'P',
+		'/~?([-\w]+)/(\d+).html'				=> 'P',
 		'/\d+.html'							=> ['P', "^http://([-\\w]+)\\.@{[BASE_DOMAIN]}/(\\d+)"],
-		'/community/(\w+)/(\d+).html'		=> 'Q',
-		'/\w+/\d+.html'						=> ['X', "^http://(?:users|community)\\.@{[BASE_DOMAIN]}/(\\w+)/(\\d+)"],
-		'/users/(\w+)/\d{4}/\d{2}/'			=> 'C',
-		'/(\w+)/\d{4}/\d{2}/'				=> 'C',
-		'/~(\w+)/\d{4}/\d{2}/'				=> 'C',
+		'/community/([-\w]+)/(\d+).html'		=> 'Q',
+		'/[-\w]+/\d+.html'						=> ['X', "^http://(?:users|community)\\.@{[BASE_DOMAIN]}/([-\\w]+)/(\\d+)"],
+		'/users/([-\w]+)/\d{4}/\d{2}/'			=> 'C',
+		'/([-\w]+)/\d{4}/\d{2}/'				=> 'C',
+		'/~([-\w]+)/\d{4}/\d{2}/'				=> 'C',
 		'/\d{4}/\d{2}/'						=> ['C', "^http://([-\\w]+)\\.@{[BASE_DOMAIN]}"],
-		'/talkread.bml\?journal=(\w+)&itemid=(\d+)'	=> 'P'
+		'/talkread.bml\?journal=([-\w]+)&itemid=(\d+)'	=> 'P'
 	);
-	
+
 	$link_type = '';
-	
+
 	foreach my $part (keys %url_parts) {
 		if ($link =~ m#@{[BASE_DOMAIN]}$part#) {
 			if (ref($url_parts{$part})) { # match against second regexp
@@ -238,7 +239,7 @@ sub parse_link {
 			last;
 		}
 	}
-	
+
 	$user =~ s/-/_/g if (defined $user);
 	return ($link_type, $user, $post_id);
 }
@@ -272,53 +273,53 @@ get year and month of the last downloaded post
 =cut
 sub get_date_range {
 	my ($user, $is_xml) = @_;
-	
+
 	my ($start_year, $start_month, $end_year, $end_month, @date, $t);
-	
+
 	@date = localtime();
 
 	# get end date
 	if ($opt_d) {
 		($start_year, $start_month, $end_year, $end_month) = split(/\D/, $opt_d);
-		
+
 		$end_year = $date[5]+1900 unless $end_year;
 		$end_month = $date[4]+1 unless $end_month;
-		
+
 		# swap dates if specified in reversed order
 		if ($start_year > $end_year) {
 			($start_year, $end_year, $start_month, $end_month) = ($end_year, $start_year, $end_month, $start_month);
 		} elsif (($start_year == $end_year) && ($start_month > $end_month)) {
 			($start_month, $end_month) = ($end_month, $start_month);
 		}
-		
+
 		return ($start_year, $start_month, $end_year, $end_month);
-			
+
 	} else {
 		$start_year = START_YEAR;
 		$start_month = 1;
 		$end_year  = $date[5] + 1900;
 		$end_month = $date[4] + 1;
 	}
-	
+
 	# set start_year, start_month based on the downloaded posts
-	if (!(-d LOCAL_DIR . $user) || $opt_O || $opt_r) { 
+	if (!(-d LOCAL_DIR . $user) || $opt_O || $opt_r) {
 		return ($start_year, $start_month, $end_year, $end_month);
 	}
-	
+
 	if (!$is_xml) { # date range between last post and current month
 		opendir(UD, LOCAL_DIR . $user) or die "error opening " . LOCAL_DIR . "$user directory for reading: $!\n";
 		my ($year) = sort {$b <=> $a } grep(/^\d+$/, readdir(UD));
 		closedir UD;
 		return ($start_year, $start_month, $end_year, $end_month) unless $year;
-		
+
 		opendir(UD, LOCAL_DIR . "$user/$year") or die "error opening " . LOCAL_DIR . "$user/$year directory for reading: $!\n";
 		my ($month) = sort {$b <=> $a } grep(/^\d+$/, readdir(UD));
 		closedir UD;
 		$month = 1 unless $month;
-		
+
 		return ($year, $month, $end_year, $end_month);
-		
-		
+
+
 	} else { # date range for XML export
 		opendir(UD, LOCAL_DIR . $user . '/export') or die "error opening " . LOCAL_DIR . "$user/export directory for reading: $!\n";
 		my ($lastfile) = reverse sort grep (/^\d+_\d+\.xml$/, readdir UD);
@@ -346,10 +347,10 @@ sub get_pics {
 	foreach $imgsrc (keys %images) {
 		# test if there is already image with the same name
 		next if (-f $images{$imgsrc});
-		
+
 		# get image
 		if ($img = get_page($imgsrc, 1)) {
-		 	mkpath(dirname($images{$imgsrc}), DEBUG_LEVEL, 0755) 
+		 	mkpath(dirname($images{$imgsrc}), DEBUG_LEVEL, 0755)
 				unless -d dirname($images{$imgsrc});
 			if (open (DF, ">$images{$imgsrc}")) {
 				binmode DF;
@@ -376,7 +377,7 @@ sub get_memos {
 	my ($user) = @_;
 	my($content, $amuser, $keyword);
 	my (@memos, $link, $link_post);
-	
+
 	logmsg("getting list of memories...\n",2);
 	# get list of keywords
 	if ($content = get_page(BASE_URL . MEMO_SCRIPT . "?user=$user")) {
@@ -388,7 +389,7 @@ sub get_memos {
 			$keyword =~  s/\+/ /g;
 			$keyword =~  s/%([0-9A-Fa-f]{2})/chr(hex($1))/eg;
 			$keyword = from_utf8($keyword) if (UTF8_DECODE || $opt_U);
-			
+
 			# get list of posts for the given keyword
 			$link = BASE_URL . $link unless ($link =~ /^@{[BASE_URL]}/);
 			if ($content = get_page($link)) {
@@ -415,7 +416,7 @@ sub get_memos {
 	} else { # error fetching list of keywords
 		logmsg("error fetching list of keywords for $user\n",0);
 	}
-	
+
 	return @memos;
 }
 
@@ -428,12 +429,12 @@ get list of user's posts and store them in $posts{posts}
 sub get_posts {
 	my ($user) = @_;
 	my ($content, $year, $month, @posts, $link, $emonth, $itemid, $link_type, $post_id, $amuser);
-	
+
 	@posts = ();
 	my ($start_year, $start_month, $end_year, $end_month) = get_date_range($user);
 	logmsg("getting posts links for $user " .
 		sprintf("[ %4d/%02d - %4d/%02d ]", $start_year,$start_month,$end_year,$end_month) . "\n");
-	
+
 	$year = $end_year;
 	YEAR:
 	while ($year >= $start_year) {
@@ -460,7 +461,7 @@ sub get_posts {
 						'comments'	=> ($content =~ m#$post_id\.html\D+(\d+)\s+repl#)? $1 : 0
 					};
 				} # link loop on the catalog page
-				
+
 			} else { # error fetching catalog data
 				logmsg("!! Error fetching catalog data. Going on with " . @posts . " posts\n");
 				return @posts unless $opt_I;
@@ -479,8 +480,8 @@ download and process posts and memories.
 sub get_files {
 	my ($user) = @_;
 	my ($post, $content, $dir, $fname, $result, $extor, $up, $navbar, $n, $myhref);
-	
-	
+
+
 	my $charset = "<meta http-equiv=\"Content-Type\" content=\"text/html; ";
 	$charset .= (UTF8_DECODE || $opt_U)?  "charset=@{[LOCAL_CHARSET]}\">" : "charset=utf-8\">";
 
@@ -491,13 +492,13 @@ sub get_files {
 			$dir = LOCAL_DIR . "$user/$post->{year}/$post->{month}";
 			$fname = "$post->{itemid}.html";
 			$up = "../../..";
-			
+
 		} else { # memo
 			$dir = LOCAL_DIR . "$user/memories";
 			$fname = "$post->{amuser}_$post->{itemid}.html";
 			$up = "../..";
 		}
-		
+
 		if (-s "$dir/$fname") {
 			if ($opt_O) {
 				logmsg("!! overwriting $dir/$fname\n", 2);
@@ -508,7 +509,7 @@ sub get_files {
 				last;
 			}
 		}
-		
+
 		# old scheme
 		if ($post->{'link'} =~ m#(journal=\w+&itemid=\d+)#) {
 			$myhref = POST_SCRIPT . "?$1";
@@ -519,7 +520,7 @@ sub get_files {
 			$myhref = "$1.html";
 			$post->{'link'} .= '?mode=reply' if ($opt_c);
 		}
-		
+
 		my $need_threader =
 			defined($post->{'comments'}) &&
 			($post->{'comments'} >= 50) &&
@@ -538,9 +539,9 @@ sub get_files {
 			open DF,">$dir/$fname" or die "error opening $dir/$fname for writing: $!\n";
 			print DF $content;
 			close DF;
-				
+
 			$post->{'status'} = 1;
-			
+
 		} else { # error fetching page
 			print "error fetching " . $post->{'link'} . "\n";
 			last unless $opt_I;
@@ -572,7 +573,7 @@ sub rewrite_imgsrc {
 			} else {
 				delete $images{$src};
 			}
-			
+
 		} elsif ($src =~ m#userpic\.$d2(\d+/\d+)$#) {
 			if ($opt_i > 1) {
 				$d1 = $1;
@@ -581,18 +582,18 @@ sub rewrite_imgsrc {
 			} else {
 				delete $images{$src};
 			}
-			
+
 		} elsif ($opt_i > 2) {
 			$d1 = $src;
 			$d1 =~ s#^http://##;
 			$d1 =~ s#[^(\w|\/|\.)]#_#g;
 			$$page =~ s#src\s*=\s*['"]\Q$src\E['"]#src='$up/$user/img/$d1'#sg;
 			$images{$src} = "$user/img/$d1";
-			
+
 		} else {
 			delete $images{$src};
 		}
-	}	
+	}
 }
 
 
@@ -610,7 +611,7 @@ sub cleanup_html {
 			$in_navbar = 0 if ($n =~ /E0/);
 			next;
 		}
-		
+
 		$in_reply = 0 if (m#</BODY>#i);
 		next if $in_reply;
 		$in_reply = 1 if ($opt_c && m#<a href=["']\Q$myhref\E['"]>Read comments</a>#);
@@ -632,7 +633,7 @@ sub cleanup_html {
 		s#<link href=.*?>##g;
 		$result .= "$_\n";
 	}
-	
+
 	# replace relative hrefs with absolute
 	%links = map {$_ => 1} &tiny_link_extor(\$result, 0);
 	my $prefix = 'http://';
@@ -645,7 +646,7 @@ sub cleanup_html {
 	foreach $rlink (keys %links) {
 		next if ($rlink =~ m#^https?://#);
 		$rlink =~ s#^/##;
-		$result =~ s#href=(['"])\Q$rlink\E\1#href="$prefix/$rlink"#sg 
+		$result =~ s#href=(['"])\Q$rlink\E\1#href="$prefix/$rlink"#sg
 	}
 	$$page = $result;
 	1;
@@ -659,9 +660,9 @@ login to server, get cookies
 =cut
 sub lj_login {
 	logmsg("logging in to " . BASE_URL . "... \n", 1);
-	my ($user, $password) = ((defined $opt_u) && (length $opt_u > 0))? 
+	my ($user, $password) = ((defined $opt_u) && (length $opt_u > 0))?
 		split(":", $opt_u, 2) : (LOGIN, PASSWORD);
-	
+
 	my ($status1, $lj1) = &lj_interface_query(
 		{ 'mode'	=> 'getchallenge' }
 	);
@@ -689,7 +690,7 @@ sub lj_login {
 				if (!$status1) {
 					my $req = new HTTP::Request(POST => BASE_URL . LOGIN_SCRIPT);
 					$req->content_type('application/x-www-form-urlencoded');
-					my $content = 
+					my $content =
 						"chal=".$lj1->{'challenge'} .
 						"&response=".md5_hex($lj1->{'challenge'} . md5_hex($password)) .
 						"&user=$user" .
@@ -715,7 +716,7 @@ sub lj_login {
 				logmsg('Error logging in to server.', 0);
 				return undef;
 			}
-			
+
 		} else {
 			logmsg('Error logging in to server.', 0);
 			return undef;
@@ -738,28 +739,28 @@ sub get_page {
 	my ($url, $is_image, $use_threader) = @_;
 
 	if (!$is_image) {
-		$url .= ($url =~ /\?/)? '&format=light' : '?format=light' 
+		$url .= ($url =~ /\?/)? '&format=light' : '?format=light'
 			if ($url !~ /format=light/);
     $url .= '&style=mine';
 	}
 	my $logprefix = ($use_threader)? "THREADER: " : '';
 	logmsg("<< $logprefix$url\n",2);
-	
+
 	if ($use_threader){
 		$req = new HTTP::Request(POST => THREADER);
 		$req->content_type('application/x-www-form-urlencoded');
 
-		my ($user, $password) = ((defined $opt_u) && (length $opt_u > 0))? 
+		my ($user, $password) = ((defined $opt_u) && (length $opt_u > 0))?
 			split(':', $opt_u) : ();
 		my $content = "addr=$url";
 		$content .= "user=$user&password=$password" if $user;
 		$req->content($content);
-		
+
 	} else {
 		$req = new HTTP::Request GET => $url;
 	}
 	$req->header('Accept-Encoding' => 'gzip;q=1.0, *;q=0');
-	
+
 	foreach (1 .. MAX_TRIES) {
 		logmsg("retrying $logprefix$url...\n", 0) if ($_ > 1);
 		#send request
@@ -767,10 +768,10 @@ sub get_page {
 		#process responce
 		if ($res->is_success) {
 			$stat{'pages_ok'}++;
-			
+
 			return ($res->content_encoding && ($res->content_encoding =~ /gzip/))?
 				Compress::Zlib::memGunzip($res->content) : $res->content;
-			
+
 		} else {
 			my $err = $res->error_as_HTML;
 			$err =~ s/^[^\d].*$//mg;
@@ -806,7 +807,7 @@ build index file for the given user
 sub build_index {
 	my ($user) = @_;
 	my ($month, $year, @months);
-	
+
 	@months = ('','January','February','March','April','May','June',
 	'July','August','September','October','November','December');
 
@@ -815,7 +816,7 @@ sub build_index {
 		logmsg(LOCAL_DIR . $user . " not found.");
 		return;
 	}
-	
+
 	# traverse directory tree calling process_html for each file found
 	find({
 			wanted => \&process_html_file,
@@ -823,7 +824,7 @@ sub build_index {
 		}, LOCAL_DIR . $user);
 
 	# write index.html
-	open DF, ">" . LOCAL_DIR . $user . "/index.html" 
+	open DF, ">" . LOCAL_DIR . $user . "/index.html"
 		or die "error opening " . LOCAL_DIR . $user . "/index.html" .
 				"for writing: $!\n";
 
@@ -840,9 +841,9 @@ sub build_index {
 	<hr width="550" size="3" noshade align="left">
 	<font size="+2"><b><a href="@{[BASE_URL]}users/$user">$user</a></b>'s livejournal.&nbsp;&nbsp;</font>
 EOH
-	print DF "<font size=\"+1\">$stat{count_memos} <a href=\"#memories\">memories</a></font> "	
+	print DF "<font size=\"+1\">$stat{count_memos} <a href=\"#memories\">memories</a></font> "
 		if (scalar keys %memories);
-		
+
 	if (scalar keys %posts) {
 		print DF "<font size=\"+1\"> | $stat{count_posts} posts: ";
 		foreach (sort keys %posts) { # foreach year
@@ -853,7 +854,7 @@ EOH
 
 	print DF "<br><tt><b>last updated:</b> " . (scalar localtime) . "</tt>\n";
 	print DF '<hr width="550" size="3" noshade align="left">' . "\n";
-	
+
 
 	my ($postid, $title, $locallink, $key, $amuser, $itemid, $link, $metapost, $filename);
 
@@ -863,7 +864,7 @@ EOH
 			print DF "<a name=\"$year\"></a>\n";
 			print DF '<p><hr width="550" size="1" noshade align="left">' . "\n";
 			print DF '<b><font size="+1"><a href="#top">' . $year . '</a>: </font></b><font size="-1">';
-			print DF "<a href=\"#$year-$_\">" . 
+			print DF "<a href=\"#$year-$_\">" .
 				$months[$_+0] . "</a> | "
 				foreach (sort {$a <=> $b} keys %{$posts{$year}});
 			print DF '</font><hr width="550" size="1" noshade align="left"><br>' . "\n";
@@ -877,10 +878,10 @@ EOH
 					$filename = $metapost->{'filename'};
 					$title = $metapost->{'title'};
 					$title = '<i>no title</i>' unless ($title =~ /\S/);
-					$locallink = (index($title, '<a') > -1)? 
+					$locallink = (index($title, '<a') > -1)?
 						"[<a href=\"$year/$month/$filename\" target=\"post\">read</a>]&nbsp; $title" :
 						"<a href=\"$year/$month/$filename\" target=\"post\">$title</a>";
-		
+
 					print DF "<font color=\"gray\" size=\"-1\">" . $metapost->{'day'} . "</font> $locallink &nbsp;&nbsp;| <a href=\"" . &make_link($metapost->{'link_type'}, $metapost->{'amuser'}, $metapost->{'itemid'}) . "?usescheme=lynx\" target=\"_new\"><b>&raquo;</b></a><br>\n";
 					print DF "<p>\n";
 				}
@@ -907,20 +908,20 @@ EOH
 					"@{[POST_SCRIPT]}?itemid=$itemid&usescheme=lynx";
 
 				# make separate link if there is a link it title (avoid nested <a>'s)
-				$locallink = (index($title, '<a') > -1)? 
+				$locallink = (index($title, '<a') > -1)?
 					"[<a href=\"memories/$filename\" target=\"post\">read</a>]&nbsp; $title" :
 					"<a href=\"memories/$filename\" target=\"post\">$title</a>";
-				
+
 				print DF "<dd><b><a href=\"@{[BASE_URL]}userinfo.bml?user=$amuser&mode=full&usescheme=lynx\">*</a>&nbsp;<a href=\"@{[BASE_URL]}users/$amuser/\">$amuser</a></b>: &nbsp; $locallink &nbsp;&nbsp;| <a href=\"@{[BASE_URL]}$link\"><b>&raquo;</b></a></dd>\n";
 			}
 			print DF "</dl>\n";
 		}
 	}
-	
+
 	print DF <<EOE;
 <p><br>
 <hr width="550" size="1" noshade align="left">
-generated by <a href="http://www.offtopia.net/~ati/ljsm/">ljsm</a> @{[CVSVERSION]} 
+generated by <a href="http://www.offtopia.net/~ati/ljsm/">ljsm</a> @{[CVSVERSION]}
 </body>
 </html>
 EOE
@@ -938,14 +939,14 @@ sub sort_directory {
 #
 sub process_html_file {
 	my ($line, $link, $kw, $title, $amuser, $itemid, $date, $locallink, $user, $metainfo, $is_utf8);
-	
+
 	return unless ($File::Find::dir =~ m#(\w+)/(\d{4}/\d{1,2}|memories)#);
 	$user = $1;
 	return unless (-s && /\.html$/);
-	
+
 	# $_ is set to file name and we are inside target directory
 	open DF, "<$_" or die "Error opening $File::Find::name for reading: $!\n";
-	
+
 	# search for link, keywords, title and date
 	$title = '';
 	while ($line = <DF>) {
@@ -972,17 +973,17 @@ sub process_html_file {
 		'keywords'	=> $kw
 	};
 
-	
+
 	close DF or warn "Error closing $File::Find::name : $!\n";
-	
+
 	if ($File::Find::dir =~ /memories/) { # memories
 		$stat{'count_memos'}++;
 		$_ =~ m#(\w*)_(\d+)\.html#;
 		$metainfo->{'amuser'} = $1;
 		$metainfo->{'itemid'} = $2;
 		push @{$memories{$kw}}, $metainfo;
-		
-	} elsif ($File::Find::name =~ m#(\w+)/(\d{4})/(\d{1,2})/(\d+).html#)  { # posts 
+
+	} elsif ($File::Find::name =~ m#(\w+)/(\d{4})/(\d{1,2})/(\d+).html#)  { # posts
 		# $1 = user , $2 = year, $3 = month, $4 = itemid $_ = html file name
 		$stat{'count_posts'}++;
 		$metainfo->{'itemid'} = $4;
@@ -1001,7 +1002,7 @@ sub process_html_file {
 sub make_hhp {
 	my ($postid);
 	# write main project file
-	open DF, ">" . LOCAL_DIR . $user . "/$user.hhp" 
+	open DF, ">" . LOCAL_DIR . $user . "/$user.hhp"
 		or die "error opening " . LOCAL_DIR . $user . "/$user.hhp" .
 				"for writing: $!\n";
 	print DF <<EOHHP;
@@ -1023,7 +1024,7 @@ EOHHP
 	print DF "[INFOTYPES]\n"
 	close DF or warn "Error closing $user.hhp: $!\n";
 
-	open DF, ">" . LOCAL_DIR . $user . "/TOC.hhc" 
+	open DF, ">" . LOCAL_DIR . $user . "/TOC.hhc"
 		or die "error opening " . LOCAL_DIR . $user . "/TOC.hhc" .
 				"for writing: $!\n";
 	print DF <<EOTOC;
@@ -1091,7 +1092,7 @@ fails immediately if LJ server returns error
 =cut
 sub lj_interface_query($) {
 	my ($form) = @_;
-	
+
 	my ($res);
 	foreach (1 .. MAX_TRIES) {
 		$res = $ua->post(INTERFACE, $form);
@@ -1106,13 +1107,13 @@ sub lj_interface_query($) {
 	# 1 = HTTP error
 	unless ($res->is_success) {
 		logmsg("HTTP request failed after " . MAX_TRIES . " attempts. aborting...\n", 0);
-		return (1, undef) 
+		return (1, undef)
 	}
-	
+
 	#warn $res->content . "\n";
 	my %lj_response = split(/\n/, $res->content);
-	my $code = (defined($lj_response{'success'}) && 
-		($lj_response{'success'} eq 'OK') && 
+	my $code = (defined($lj_response{'success'}) &&
+		($lj_response{'success'} eq 'OK') &&
 		!defined($lj_response{'errmsg'}))? 0 : 2; # 0 = success, 2 = LJ interface error
 
 	if ($code) {
@@ -1163,11 +1164,11 @@ sub tiny_link_extor($$) {
 
 convert string from utf8 according to specified encoding
 based on function from Guido Socher's Unicode::UTF8simple
- 
+
 =cut
 sub from_utf8($){
     my ($str) = @_;
-	
+
 	my %utf2cp = (
 		0x0430 => 0xE0, 0x0431 => 0xE1, 0x0432 => 0xE2, 0x0433 => 0xE3, 0x0434 => 0xE4,
 		0x0435 => 0xE5, 0x0451 => 0xB8, 0x0436 => 0xE6, 0x0437 => 0xE7, 0x0438 => 0xE8,
@@ -1271,7 +1272,7 @@ END {
 	if ((DEBUG_LEVEL > 0) && (scalar keys %stat)) {
 		print "\n\n================ s t a t i s t i c s ====================\n";
 		print "ljsm.pl @{[CVSVERSION]}\n";
-		print "$stat{$_} $_  " foreach keys %stat; 
+		print "$stat{$_} $_  " foreach keys %stat;
 		print "\n=========================================================\n";
 	}
 	close LF;
