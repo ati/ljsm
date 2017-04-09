@@ -1,4 +1,4 @@
-#!perl
+#!/usr/bin/env perl
 # CVS: $Id: ljsm.pl,v 2.11 2017/04/06 14:35:09 sasha Exp $
 # Author: Alexander Nikolaev <variomap@gmail.com>
 
