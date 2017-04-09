@@ -600,18 +600,12 @@ sub rewrite_imgsrc {
 
 sub cleanup_html {
 	my ($page, $myhref, $user) = @_;
-	my ($result, $in_navbar, $n, $in_reply, %links, $rlink);
+	my ($result, $in_navbar, $in_reply, %links, $rlink);
 
 	$in_navbar = 1;
 	$in_reply = 0;
 	$result = '';
 	foreach (split(/\n/, $$page)) {
-		# skip navigation bar
-		if ($in_navbar && ($n = /<HR ?\/?>/i ... /<HR ?\/?>/i)) {
-			$in_navbar = 0 if ($n =~ /E0/);
-			next;
-		}
-
 		$in_reply = 0 if (m#</BODY>#i);
 		next if $in_reply;
 		$in_reply = 1 if ($opt_c && m#<a href=["']\Q$myhref\E['"]>Read comments</a>#);
@@ -633,6 +627,12 @@ sub cleanup_html {
 		s#<link href=.*?>##g;
 		$result .= "$_\n";
 	}
+
+  # safety net for runaway regexps
+  if (length($result) == 0) {
+    logmsg("** Failed to parse '" . $myhref . "', saving original HTML page\n");
+    $result = $$page;
+  }
 
 	# replace relative hrefs with absolute
 	%links = map {$_ => 1} &tiny_link_extor(\$result, 0);
@@ -1249,7 +1249,7 @@ $0 [-r -m -a -O -I -u user:password -p proxyURL -d yyyy/mm[:yyyy/mm]] user1 user
 $0 -x user1 user2 ...
  -a = save memories AND posts
  -c = save posts without comments
- -r = resume processing if there is already local file for the given post
+ -r = make sure there's non-empty local file for each post in the date range
  -m = save memories instead of posts
  -O = overwrite existing files (NOT recommended)
  -i [1|2|3] = download icons (1) userpics (2) or all graphics (3) referenced in posts
