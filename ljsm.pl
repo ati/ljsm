@@ -1,13 +1,12 @@
-#!perl
+#!/usr/bin/env perl
 # CVS: $Id: ljsm.pl,v 2.12 2017/04/10 09:18:00 sasha Exp $
 # Author: Alexander Nikolaev <variomap@gmail.com>
-
 #perl2exe_info FileDescription=Utility for Livejournal.com backup
 #perl2exe_info ProductName=LJSM
 #perl2exe_info ProductVersion=2.12.0.0
 #perl2exe_info FileVersion=2.12.0.0
 #perl2exe_info LegalCopyright=GPL
-#perl2exe_info CompanyName=Alexander Nikolaev, sasha_nikolaev@yahoo.com
+#perl2exe_info CompanyName=Alexander Nikolaev
 
 
 =head1 SYNOPSYS
