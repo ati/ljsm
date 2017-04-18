@@ -11,7 +11,7 @@
 
 =head1 SYNOPSYS
 
-see usage() subroutine for usage summary
+see HELP_MESSAGE() subroutine for usage summary
 
 =head1 SETUP
 
@@ -100,6 +100,7 @@ use File::Find;
 use Compress::Zlib;
 use Digest::MD5 qw(md5_hex);
 use Getopt::Std;
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
 use strict;
 
 my ($ua, $req, $res, $login, @posts, %images, $user, %users, %stat, %memories, %posts, $umask);
@@ -116,7 +117,7 @@ print LF scalar localtime() . "\n";
 getopts('rmacxtOIUu:p:d:i:');
 $opt_i = SAVE_PICS if (!$opt_i);
 
-usage() && exit unless (@ARGV);
+HELP_MESSAGE() && exit unless (@ARGV);
 
 
 # rebuild indexes and exit if -x option is set
@@ -1241,7 +1242,13 @@ sub from_utf8($){
 	return(pack("C*", @rval));
 }
 
-sub usage {
+
+sub VERSION_MESSAGE {
+  warn CVSVERSION . "\n";
+}
+
+
+sub HELP_MESSAGE {
 	warn <<EOW;
 usage:
 $0 [-r -m -a -O -I -u user:password -p proxyURL -d yyyy/mm[:yyyy/mm]] user1 user2 ...
@@ -1262,18 +1269,27 @@ $0 -x user1 user2 ...
 
 @{[CVSVERSION]}
 EOW
+  # give folks on Windows time to see the magic spells
+  if ($^X =~ /ljsm.exe/) {
+    warn "\n\nRun 'Start -> Run -> cmd' and launch ljsm.exe there\n";
+    sleep(5);
+  }
 }
 
 # print some statistics and kiss goodbye
 END {
-	delete $stat{'count_posts'};
-	delete $stat{'count_memos'};
-	if ((DEBUG_LEVEL > 0) && (scalar keys %stat)) {
-		print "\n\n================ s t a t i s t i c s ====================\n";
-		print "ljsm.pl @{[CVSVERSION]}\n";
-		print "$stat{$_} $_  " foreach keys %stat;
-		print "\n=========================================================\n";
-	}
+  my $total = 0;
+  foreach (values %stat) { $total += $_; }
+  if ($total > 0) {
+    delete $stat{'count_posts'};
+    delete $stat{'count_memos'};
+    if ((DEBUG_LEVEL > 0) && (scalar keys %stat)) {
+      print "\n\n================ s t a t i s t i c s ====================\n";
+      print "ljsm.pl @{[CVSVERSION]}\n";
+      print "$stat{$_} $_  " foreach keys %stat;
+      print "\n=========================================================\n";
+    }
+  }
 	close LF;
 	unlink 'ljsm.log' unless $stat{'pages_err'};
 }
