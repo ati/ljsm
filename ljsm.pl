@@ -377,9 +377,9 @@ get list of user's memories and store them is $posts{memos}
 
 =cut
 sub get_memos {
-	my ($user) = @_;
-	my($content, $amuser, $keyword);
-	my (@memos, $link, $link_post);
+  my ($user) = @_;
+  my($content, $amuser, $keyword);
+  my (@memos, $link, $link_post);
 
 	logmsg("getting list of memories...\n",2);
 	# get list of keywords
