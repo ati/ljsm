@@ -385,7 +385,7 @@ sub get_memos {
 	# get list of keywords
 	if ($content = get_page(BASE_URL . MEMO_SCRIPT . "?user=$user")) {
 		foreach $link (&tiny_link_extor(\$content, 0)) {
-			next unless $link =~ /@{[MEMO_SCRIPT]}\?user=\w+\&keyword=(.*?)\&filter=all$/;
+			next unless $link =~ /@{[MEMO_SCRIPT]}\?user=[-\w]+\&keyword=(.*?)\&filter=all$/;
 			$keyword = $1;
 			$keyword = " " unless length $keyword;
 			# unescape keywords
