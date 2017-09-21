@@ -82,7 +82,6 @@ use constant {
 	MEMO_SCRIPT		=> 'tools/memories.bml',
 	EXPORT_SCRIPT	=> 'export.bml',
 	INTERFACE		=> BASE_URL . 'interface/flat',
-	THREADER		=> 'http://lj.setia.ru/threader/threader.php', # external service to expand collapsed threads
 	BROKEN_CLIENT_INTERFACE	=> 1 # sessiongenerate call does not return nessesary cookies
 };
 
@@ -152,9 +151,6 @@ if ($opt_p) {
 	$opt_p = "http://$opt_p" unless ($opt_p =~ m{http://});
 	$ua->proxy('http', $opt_p);
 }
-
-# threader uses POST redirect
-$ua->requests_redirectable(['GET', 'POST']) if $opt_t;
 
 # get cookies
 exit 1 unless (!(LOGIN || $opt_u) || ($login = lj_login()));
@@ -490,6 +486,7 @@ sub get_files {
 
 	#print "going to get " . (scalar @posts) . " posts.\n";
 	logmsg((@posts)? "getting " . @posts . " posts...\n" : "No new posts to download.\n");
+  print Dumper(\@posts);
 	foreach $post (@posts) {
 		if ($post->{'type'} eq 'post') {
 			$dir = LOCAL_DIR . "$user/$post->{year}/$post->{month}";
@@ -524,14 +521,10 @@ sub get_files {
 			$post->{'link'} .= '?mode=reply' if ($opt_c);
 		}
 
-		my $need_threader =
-			defined($post->{'comments'}) &&
-			($post->{'comments'} >= 50) &&
-			$opt_t && !$opt_c;
-
   # User can get a link for the hidden post, for example trying to fetch some other's 
   # memories. In this case ljsm should continue fetching other posts, not panic on error
-	my ($should_continue_on_error, $content) = get_page($post->{'link'}, 0, $need_threader);
+	my ($should_continue_on_error, $content) = get_page($post->{'link'}, 0);
+  print Dumper(\$content);
 	if ($content) {
 			$stat{'got_posts'}++;
 			mkpath($dir, DEBUG_LEVEL, 0755);
@@ -742,7 +735,7 @@ download page from the remote host
 
 =cut
 sub get_page {
-	my ($url, $is_image, $use_threader) = @_;
+	my ($url, $is_image) = @_;
 
 	if (!$is_image) {
 		$url .= ($url =~ /\?/)? '&format=light' : '?format=light'
@@ -755,28 +748,15 @@ sub get_page {
     $url = 'http:' . $url;
   }
 
-	my $logprefix = ($use_threader)? "THREADER: " : '';
-	logmsg("<< $logprefix$url\n",2);
+	logmsg("<< $url\n",2);
 
-	if ($use_threader){
-		$req = new HTTP::Request(POST => THREADER);
-		$req->content_type('application/x-www-form-urlencoded');
-
-		my ($user, $password) = ((defined $opt_u) && (length $opt_u > 0))?
-			split(':', $opt_u) : ();
-		my $content = "addr=$url";
-		$content .= "user=$user&password=$password" if $user;
-		$req->content($content);
-
-	} else {
-		$req = new HTTP::Request GET => $url;
-	}
+	$req = new HTTP::Request GET => $url;
 	$req->header('Accept-Encoding' => 'gzip;q=1.0, *;q=0');
-
   my ($trycount, $res);
+
 	foreach (1 .. MAX_TRIES) {
     $trycount = $_;
-		logmsg("retrying $logprefix$url...\n", 0) if ($_ > 1);
+		logmsg("retrying $url...\n", 0) if ($_ > 1);
 		#send request
 		$res = $ua->request($req);
 		#process responce
@@ -1281,7 +1261,6 @@ $0 -x user1 user2 ...
  -U = make UTF-8 to locale charset conversion
  -p proxyURL = use proxyURL as a http proxy
  -d yyyy/mm[:yyyy/mm] = save posts back to the specified date or in the specified date range
- -t = use threader (@{[THREADER]}) for downloading posts with 50 or more comments
 
 @{[CVSVERSION]}
 EOW
