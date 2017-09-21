@@ -85,7 +85,7 @@ use constant {
 	BROKEN_CLIENT_INTERFACE	=> 1 # sessiongenerate call does not return nessesary cookies
 };
 
-use Data::Dumper;
+#use Data::Dumper;
 #use LWP::Debug qw(+debug +conns);
 #use Carp;
 
@@ -486,7 +486,7 @@ sub get_files {
 
 	#print "going to get " . (scalar @posts) . " posts.\n";
 	logmsg((@posts)? "getting " . @posts . " posts...\n" : "No new posts to download.\n");
-  print Dumper(\@posts);
+  # print Dumper(\@posts);
 	foreach $post (@posts) {
 		if ($post->{'type'} eq 'post') {
 			$dir = LOCAL_DIR . "$user/$post->{year}/$post->{month}";
