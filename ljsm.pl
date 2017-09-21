@@ -1,10 +1,10 @@
 #!/usr/bin/env perl
-# CVS: $Id: ljsm.pl,v 2.12 2017/04/10 09:18:00 sasha Exp $
+# CVS: $Id: ljsm.pl,v 2.14 2017/04/18 09:22:00 sasha Exp $
 # Author: Alexander Nikolaev <variomap@gmail.com>
 #perl2exe_info FileDescription=Utility for Livejournal.com backup
 #perl2exe_info ProductName=LJSM
-#perl2exe_info ProductVersion=2.12.0.0
-#perl2exe_info FileVersion=2.12.0.0
+#perl2exe_info ProductVersion=2.14.0.0
+#perl2exe_info FileVersion=2.14.0.0
 #perl2exe_info LegalCopyright=GPL
 #perl2exe_info CompanyName=Alexander Nikolaev
 
@@ -63,8 +63,8 @@ use constant {
 	DEBUG_LEVEL		=> 3,		# 0 - quiet, 1 - essential, 2 - verbose
 	LOCAL_DIR		=> '',		# local directory to put files into. Leave it empty to put in the current directory. Slash (/, if not empty) in the end required.
 	HTTP_PROXY		=> '',		# set proxy URL if you use http proxy
-	CLIENT			=> 'Perl-ljsm/2.12; variomap@gmail.com',
-	CVSVERSION		=> '$Revision: 2.12 $', # don't touch this
+	CLIENT			=> 'Perl-ljsm/2.14; variomap@gmail.com',
+	CVSVERSION		=> '$Revision: 2.14 $', # don't touch this
 	SAVE_PICS		=> 1,	# download standard icons (1) usepics (2) or all graphics referenced by post (3)
 	BASE_DOMAIN		=> 'livejournal.com' #'lj.rossia.org'
 };
