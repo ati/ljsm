@@ -85,7 +85,7 @@ use constant {
 	BROKEN_CLIENT_INTERFACE	=> 1 # sessiongenerate call does not return nessesary cookies
 };
 
-#use Data::Dumper;
+use Data::Dumper;
 #use LWP::Debug qw(+debug +conns);
 #use Carp;
 
@@ -208,13 +208,13 @@ sub parse_link {
 		'/tools/memories.bml\?user=([-\w]+)'	=> 'M',
 		'/users/([-\w]+)/(\d+).html'			=> 'P',
 		'/~?([-\w]+)/(\d+).html'				=> 'P',
-		'/\d+.html'							=> ['P', "^http://([-\\w]+)\\.@{[BASE_DOMAIN]}/(\\d+)"],
+		'/\d+.html'							=> ['P', "^https?://([-\\w]+)\\.@{[BASE_DOMAIN]}/(\\d+)"],
 		'/community/([-\w]+)/(\d+).html'		=> 'Q',
-		'/[-\w]+/\d+.html'						=> ['X', "^http://(?:users|community)\\.@{[BASE_DOMAIN]}/([-\\w]+)/(\\d+)"],
+		'/[-\w]+/\d+.html'						=> ['X', "^https?://(?:users|community)\\.@{[BASE_DOMAIN]}/([-\\w]+)/(\\d+)"],
 		'/users/([-\w]+)/\d{4}/\d{2}/'			=> 'C',
 		'/([-\w]+)/\d{4}/\d{2}/'				=> 'C',
 		'/~([-\w]+)/\d{4}/\d{2}/'				=> 'C',
-		'/\d{4}/\d{2}/'						=> ['C', "^http://([-\\w]+)\\.@{[BASE_DOMAIN]}"],
+		'/\d{4}/\d{2}/'						=> ['C', "^https?://([-\\w]+)\\.@{[BASE_DOMAIN]}"],
 		'/talkread.bml\?journal=([-\w]+)&itemid=(\d+)'	=> 'P'
 	);
 
@@ -226,7 +226,7 @@ sub parse_link {
 				$link_type = $url_parts{$part}->[0];
 				$link =~ m#$url_parts{$part}->[1]#;
 				if ($link_type eq 'X') { # user or community post?
-					$link_type = ($link =~ m#http://community#)? 'Q' : 'P';
+					$link_type = ($link =~ m#https?://community#)? 'Q' : 'P';
 				}
 				$user = $1;
 				$post_id = $2;
@@ -524,7 +524,6 @@ sub get_files {
   # User can get a link for the hidden post, for example trying to fetch some other's 
   # memories. In this case ljsm should continue fetching other posts, not panic on error
 	my ($should_continue_on_error, $content) = get_page($post->{'link'}, 0);
-  print Dumper(\$content);
 	if ($content) {
 			$stat{'got_posts'}++;
 			mkpath($dir, DEBUG_LEVEL, 0755);
@@ -584,7 +583,7 @@ sub rewrite_imgsrc {
 
 		} elsif ($opt_i > 2) {
 			$d1 = $src;
-			$d1 =~ s#^http://##;
+			$d1 =~ s#^https?://##;
 			$d1 =~ s#[^(\w|\/|\.)]#_#g;
 			$$page =~ s#src\s*=\s*['"]\Q$src\E['"]#src='$up/$user/img/$d1'#sg;
 			$images{$src} = "$user/img/$d1";
@@ -643,8 +642,7 @@ sub cleanup_html {
 		$prefix .= "$user.@{[BASE_DOMAIN]}";
 	}
 	foreach $rlink (keys %links) {
-		next if ($rlink =~ m#^https?://#);
-		$rlink =~ s#^/##;
+		$rlink =~ s#^/[^/]##;
 		$result =~ s#href=(['"])\Q$rlink\E\1#href="$prefix/$rlink"#sg
 	}
 	$$page = $result;
@@ -953,7 +951,7 @@ sub process_html_file {
 		$title = "<i>$1</i>" if ($line =~ m#^<H1>Error</H1><P>(.*)</P>$#i);
 		$date = $1 if (!$date && $line =~ m#href="@{[BASE_URL]}users/\w+/day/\d\d\d\d/\d\d/(\d{1,2})"#);
 		$date = $1 if (!$date && $line =~ m#href="@{[BASE_URL]}users/\w+/\d\d\d\d/\d\d/(\d{1,2})/"#);
-		$date = $1 if (!$date && $line =~ m#href="http://(?:[-\w]+\.)?@{[BASE_DOMAIN]}/(?:\w+/)?\d\d\d\d/\d\d/(\d{1,2})/"#);
+		$date = $1 if (!$date && $line =~ m#href="https?://(?:[-\w]+\.)?@{[BASE_DOMAIN]}/(?:\w+/)?\d\d\d\d/\d\d/(\d{1,2})/"#);
 		$users{$1}{$File::Find::name} = 1 if ($line =~ m#userinfo.bml\?user=(\w+)#);
 		$is_utf8 = 1 if ($line =~ m#<meta http-equiv="Content-Type" content="text/html; charset=utf-8">#);
 	}
