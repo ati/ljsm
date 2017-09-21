@@ -92,6 +92,10 @@ use constant {
 #use Carp;
 
 use LWP::UserAgent;
+#perl2exe_include LWP::Protocol::https
+#perl2exe_include URI::https
+#perl2exe_include PerlIO
+#perl2exe_include PerlIO::scalar
 use HTTP::Cookies;
 use File::Path;
 use File::Basename;
