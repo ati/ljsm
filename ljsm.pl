@@ -482,7 +482,7 @@ download and process posts and memories.
 =cut
 sub get_files {
 	my ($user) = @_;
-	my ($post, $content, $dir, $fname, $result, $extor, $up, $navbar, $n, $myhref);
+	my ($post, $dir, $fname, $result, $extor, $up, $navbar, $n, $myhref);
 
 
 	my $charset = "<meta http-equiv=\"Content-Type\" content=\"text/html; ";
@@ -529,7 +529,10 @@ sub get_files {
 			($post->{'comments'} >= 50) &&
 			$opt_t && !$opt_c;
 
-		if ($content = get_page($post->{'link'}, 0, $need_threader)) {
+  # User can get a link for the hidden post, for example trying to fetch some other's 
+  # memories. In this case ljsm should continue fetching other posts, not panic on error
+	my ($should_continue_on_error, $content) = get_page($post->{'link'}, 0, $need_threader);
+	if ($content) {
 			$stat{'got_posts'}++;
 			mkpath($dir, DEBUG_LEVEL, 0755);
 			&cleanup_html(\$content, $myhref, $user);
@@ -547,7 +550,7 @@ sub get_files {
 
 		} else { # error fetching page
 			print "error fetching " . $post->{'link'} . "\n";
-			last unless $opt_I;
+			last unless $opt_I || $should_continue_on_error;
 		}
 	}
 }
@@ -778,8 +781,9 @@ sub get_page {
     } elsif ($res->is_success) {
 			$stat{'pages_ok'}++;
 
-			return ($res->content_encoding && ($res->content_encoding =~ /gzip/))?
+			my $page_body = ($res->content_encoding && ($res->content_encoding =~ /gzip/))?
 				Compress::Zlib::memGunzip($res->content) : $res->content;
+      return (0, $page_body);
 
 		} else {
 			logmsg("!! $_. " . $res->status_line . ". retrying in 3 seconds...\n", 0);
@@ -790,7 +794,7 @@ sub get_page {
 	logmsg("!! failed to get $url after $trycount attempt" . (($trycount > 1)? '': 's') . "\n", 0);
 	# save failed downloads to log file
 	print LF "Failed: $url\n";
-	return undef;
+	return ($res->is_client_error, undef); # first value means "page-specific error, outer loop should continue fetching other pages"
 }
 
 
