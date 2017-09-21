@@ -749,6 +749,12 @@ sub get_page {
 			if ($url !~ /format=light/);
     $url .= '&style=mine';
 	}
+
+  # FIXME: replace same-protocol URLs with http: for now. 
+  if ($url =~ m#^//#) {
+    $url = 'http:' . $url;
+  }
+
 	my $logprefix = ($use_threader)? "THREADER: " : '';
 	logmsg("<< $logprefix$url\n",2);
 
