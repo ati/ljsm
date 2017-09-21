@@ -53,7 +53,6 @@ http://www.livejournal.com/community/lj_clients/197260.html
 =head1 SUBROUTINES
 
 =cut
-
 use constant {
 	LOGIN			=> '',	# leave it empty if you don't want to login
 	PASSWORD		=> '',
@@ -167,7 +166,7 @@ foreach $user (@ARGV) { # for each user
 	$stat{'count_posts'} = $stat{'count_memos'} = 0;
 	logmsg("\n\n=== processing user $user\n");
 
-	push @posts, get_memos($user) if ($opt_m || $opt_a);
+  push @posts, get_memos($user) if ($opt_m || $opt_a);
 	push @posts, get_posts($user) unless ($opt_m && !$opt_a);
 	get_files($user);
 	build_index($user) if @posts;
@@ -1295,7 +1294,7 @@ END {
     }
   }
 	close LF;
-	unlink 'ljsm.log' unless $stat{'pages_err'};
+  unlink 'ljsm.log' unless $stat{'pages_err'};
 }
 
 
