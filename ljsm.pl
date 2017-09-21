@@ -489,7 +489,7 @@ sub get_files {
 	$charset .= (UTF8_DECODE || $opt_U)?  "charset=@{[LOCAL_CHARSET]}\">" : "charset=utf-8\">";
 
 	#print "going to get " . (scalar @posts) . " posts.\n";
-	logmsg((@posts)? "getting posts...\n" : "No new posts to download.\n");
+	logmsg((@posts)? "getting " . @posts . " posts...\n" : "No new posts to download.\n");
 	foreach $post (@posts) {
 		if ($post->{'type'} eq 'post') {
 			$dir = LOCAL_DIR . "$user/$post->{year}/$post->{month}";
@@ -764,27 +764,30 @@ sub get_page {
 	}
 	$req->header('Accept-Encoding' => 'gzip;q=1.0, *;q=0');
 
+  my ($trycount, $res);
 	foreach (1 .. MAX_TRIES) {
+    $trycount = $_;
 		logmsg("retrying $logprefix$url...\n", 0) if ($_ > 1);
 		#send request
 		$res = $ua->request($req);
 		#process responce
-		if ($res->is_success) {
+    if ($res->is_client_error) { # 4xx codes
+      logmsg("!! " . $res->status_line . ": Deleted/hidden entry? Skipping URL\n",0);
+      last;
+
+    } elsif ($res->is_success) {
 			$stat{'pages_ok'}++;
 
 			return ($res->content_encoding && ($res->content_encoding =~ /gzip/))?
 				Compress::Zlib::memGunzip($res->content) : $res->content;
 
 		} else {
-			my $err = $res->error_as_HTML;
-			$err =~ s/^[^\d].*$//mg;
-			$err =~ s/[\n\r]+//g;
-			logmsg("\n$err\n$_. retrying in 3 seconds...\n", 0);
+			logmsg("!! $_. " . $res->status_line . ". retrying in 3 seconds...\n", 0);
 			sleep 3;
 		}
 	}
 	$stat{'pages_err'}++;
-	logmsg("failed to get $url after @{[MAX_TRIES]} attempts\n",0);
+	logmsg("!! failed to get $url after $trycount attempt" . (($trycount > 1)? '': 's') . "\n", 0);
 	# save failed downloads to log file
 	print LF "Failed: $url\n";
 	return undef;
