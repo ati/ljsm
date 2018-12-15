@@ -642,8 +642,10 @@ sub cleanup_html {
 		$prefix .= "$user.@{[BASE_DOMAIN]}";
 	}
 	foreach $rlink (keys %links) {
-		$rlink =~ s#^/[^/]##;
-		$result =~ s#href=(['"])\Q$rlink\E\1#href="$prefix/$rlink"#sg
+		if ($rlink =~ /^\/[^\/]/) {
+			$rlink =~ s#^/##;
+			$result =~ s#href=(['"])\Q$rlink\E\1#href="$prefix/$rlink"#sg
+		}
 	}
 	$$page = $result;
 	1;
