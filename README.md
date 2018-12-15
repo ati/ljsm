@@ -7,6 +7,8 @@
 В windows надо запускать `ljsm.exe`
 В маке и линуксе - `ljsm.pl`
 
+Чтобы получить полную справку о возможных параметрах командной строки - запустите программу без параметров.
+
 
 ## Как запускать на Windows 
 
@@ -16,9 +18,9 @@
 4. Откроется черное окно командной строки
 5. ввести в ней команду (заменив в ней указанные поля на свой логин и пароль и жж, который качаем):
 ```
-ljsm.exe -I -i 3 -u твойлогин:твойпароль какойжжкачать
+ljsm.exe -I -i 4 -u твойлогин:твойпароль какойжжкачать
 НАПРИМЕР:
-ljsm.exe -I -i 3 -u kukutz:JKHkjhnbsh66mhFTbhf kukutz
+ljsm.exe -I -i 4 -u kukutz:JKHkjhnbsh66mhFTbhf kukutz
 ```
 6. ждать
 
@@ -31,9 +33,9 @@ ljsm.exe -I -i 3 -u kukutz:JKHkjhnbsh66mhFTbhf kukutz
 4. ввести в ней команду cd ~/Downloads/ и нажать Enter
 5. ввести команду (заменив в ней указанные поля на свой логин и пароль и жж, который качаем):
 ```
-perl ljsm.pl -I -i 3 -u твойлогин:твойпароль какойжжкачать
+perl ljsm.pl -I -i 4 -u твойлогин:твойпароль какойжжкачать
 НАПРИМЕР:
-perl ljsm.pl -I -i 3 -u kukutz:JKHkjhnbsh66mhFTbhf kukutz
+perl ljsm.pl -I -i 4 -u kukutz:JKHkjhnbsh66mhFTbhf kukutz
 ```
 6. ждать
 

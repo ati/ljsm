@@ -591,6 +591,19 @@ sub rewrite_imgsrc {
 		} else {
 			delete $images{$src};
 		}
+	};
+
+	if ($opt_i > 3) {
+		my %images_links = (%images, map {$_ => 1} &tiny_link_extor($page, 0));
+		foreach $src (keys %images_links) {
+			if (($src =~ m#.jpg$#i) || ($src =~ m#.jpeg$#i) || ($src =~ m#.png$#i) || ($src =~ m#.gif$#i)) {
+				$d1 = $src;
+				$d1 =~ s#^https?://##;
+				$d1 =~ s#[^(\w|\/|\.)]#_#g;
+				$$page =~ s#href\s*=\s*['"]\Q$src\E['"]#href='$up/$user/img/$d1'#sg;
+				$images{$src} = "$user/img/$d1";
+			}
+		}
 	}
 }
 
@@ -642,8 +655,10 @@ sub cleanup_html {
 		$prefix .= "$user.@{[BASE_DOMAIN]}";
 	}
 	foreach $rlink (keys %links) {
-		$rlink =~ s#^/[^/]##;
-		$result =~ s#href=(['"])\Q$rlink\E\1#href="$prefix/$rlink"#sg
+		if ($rlink =~ /^\/[^\/]/) {
+			$rlink =~ s#^/##;
+			$result =~ s#href=(['"])\Q$rlink\E\1#href="$prefix/$rlink"#sg
+		}
 	}
 	$$page = $result;
 	1;
@@ -1252,7 +1267,7 @@ $0 -x user1 user2 ...
  -r = make sure there's non-empty local file for each post in the date range
  -m = save memories instead of posts
  -O = overwrite existing files (NOT recommended)
- -i [1|2|3] = download icons (1) userpics (2) or all graphics (3) referenced in posts
+ -i [1|2|3|4] = download icons (1) userpics (2) all inline graphics (3) or all external graphics (4) referenced in posts
  -I = ignore network errors and continue fetching posts
  -x = rebuild index file and exit
  -u user:password = specify user:password pair for LJ login on the command prompt
