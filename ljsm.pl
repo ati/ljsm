@@ -86,9 +86,7 @@ use constant {
 };
 
 #use Data::Dumper;
-#use LWP::Debug qw(+debug +conns);
 #use Carp;
-
 use LWP::UserAgent;
 #perl2exe_include LWP::Protocol::https
 #perl2exe_include URI::https
@@ -144,6 +142,11 @@ $ua->cookie_jar(new HTTP::Cookies(
 	autosave	=> 0)
 );
 push @{ $ua->requests_redirectable }, 'POST';
+
+# LWP communication logging
+# previously done by LWP::Debug
+# $ua->add_handler("request_send",  sub { shift->dump; return });
+# $ua->add_handler("response_done", sub { shift->dump; return });
 
 # set proxy URL for LWP requests
 $ua->proxy('http', HTTP_PROXY) if HTTP_PROXY;
