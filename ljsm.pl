@@ -71,7 +71,7 @@ use constant {
 # ===================================================================
 # end of public constants definition. no user-editable parts below this line
 # ===================================================================
-use constant BASE_URL	=> 'http://www.' . BASE_DOMAIN . '/';
+use constant BASE_URL	=> 'https://www.' . BASE_DOMAIN . '/';
 
 use constant {
 	MAX_TRIES		=> 5, # max tries to get page in case of failure
