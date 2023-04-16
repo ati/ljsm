@@ -104,7 +104,7 @@ $Getopt::Std::STANDARD_HELP_VERSION = 1;
 use strict;
 
 my ($ua, $req, $res, $login, @posts, %images, $user, %users, %stat, %memories, %posts, $umask);
-our ($opt_r, $opt_m, $opt_a, $opt_c, $opt_O, $opt_i, $opt_I, $opt_u, $opt_U, $opt_x, $opt_t, $opt_p, $opt_d);
+our ($opt_r, $opt_m, $opt_a, $opt_c, $opt_O, $opt_i, $opt_I, $opt_u, $opt_U, $opt_x, $opt_t, $opt_p, $opt_d, $opt_L);
 
 # open log file (delete it if there were no errors)
 $umask = umask 0077;
@@ -114,7 +114,7 @@ print LF "\n============= " . join(' ', @ARGV) . "\n";
 print LF scalar localtime() . "\n";
 
 # steal options from @ARGV before we go for users
-getopts('rmacxtOIUu:p:d:i:');
+getopts('rmacxtOIULu:p:d:i:');
 $opt_i = SAVE_PICS if (!$opt_i);
 
 HELP_MESSAGE() && exit unless (@ARGV);
@@ -1262,6 +1262,7 @@ $0 -x user1 user2 ...
  -U = make UTF-8 to locale charset conversion
  -p proxyURL = use proxyURL as a http proxy
  -d yyyy/mm[:yyyy/mm] = save posts back to the specified date or in the specified date range
+ -L = don't remove log file at program exit
 
 @{[CVSVERSION]}
 EOW
@@ -1287,7 +1288,7 @@ END {
     }
   }
 	close LF;
-  unlink 'ljsm.log' unless $stat{'pages_err'};
+  unlink 'ljsm.log' unless ($stat{'pages_err'} || $opt_L);
 }
 
 
