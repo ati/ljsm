@@ -87,6 +87,7 @@ use constant {
 
 #use Data::Dumper;
 #use Carp;
+use local::lib;
 use LWP::UserAgent;
 #perl2exe_include LWP::Protocol::https
 #perl2exe_include URI::https
