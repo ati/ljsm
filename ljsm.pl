@@ -936,7 +936,7 @@ sub sort_directory {
 # callback subroutine for build_index
 #
 sub process_html_file {
-	my ($line, $link, $kw, $title, $amuser, $itemid, $date, $locallink, $user, $metainfo, $is_utf8);
+	my ($line, $link, $kw, $title, $description, $amuser, $itemid, $date, $locallink, $user, $metainfo, $is_utf8);
 
 	return unless ($File::Find::dir =~ m#(\w+)/(\d{4}/\d{1,2}|memories)#);
 	$user = $1;
@@ -948,11 +948,13 @@ sub process_html_file {
 	# search for link, keywords, title and date
 	$title = '';
 	while ($line = <DF>) {
-		$kw = $1 if ($line =~ /<meta name="keywords" content="(.*?)">/);
+		$kw = $1 if ($line =~ /<meta property="keywords" content="(.*?)">/);
     $title = $1 if ($line =~ m#<title>(.*): $user</title>#);
 		$title = $1 if ($line =~ m#<font face=["']Arial,Helvetica['"] size=['"]?\+1['"]?><i><b>(.*?)</b></i>#i);
+		$title = $1 if ($line =~ m#<meta property="og:title" content="(.*?)" />#);
 		$title = "<i>$1</i>" if ($line =~ m#<span class="heading">Error</span><br />(.*)$#i);
 		$title = "<i>$1</i>" if ($line =~ m#^<H1>Error</H1><P>(.*)</P>$#i);
+		$description = $1 if ($line =~ m#<meta property="og:description" content="(.*?)" />#);
 		$date = $1 if (!$date && $line =~ m#href="@{[BASE_URL]}users/\w+/day/\d\d\d\d/\d\d/(\d{1,2})"#);
 		$date = $1 if (!$date && $line =~ m#href="@{[BASE_URL]}users/\w+/\d\d\d\d/\d\d/(\d{1,2})/"#);
 		$date = $1 if (!$date && $line =~ m#href="https?://(?:[-\w]+\.)?@{[BASE_DOMAIN]}/(?:\w+/)?\d\d\d\d/\d\d/(\d{1,2})/"#);
@@ -968,7 +970,8 @@ sub process_html_file {
 		'filename'	=> $_,
 		'title'		=> $title,
 		'day'		=> $date,
-		'keywords'	=> $kw
+		'keywords'	=> $kw,
+		'description' => $description
 	};
 
 
