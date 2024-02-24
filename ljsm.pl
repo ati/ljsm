@@ -97,7 +97,8 @@ use HTTP::Cookies;
 use File::Path;
 use File::Basename;
 use File::Find;
-
+use IO::Socket::SSL;
+use Mozilla::CA;
 use Compress::Zlib;
 use Digest::MD5 qw(md5_hex);
 use Getopt::Std;
